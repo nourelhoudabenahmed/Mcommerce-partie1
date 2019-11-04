@@ -64,24 +64,34 @@ public class ProductController {
 
 
 
-    //ajouter un produit
+ //ajouter un produit
     @PostMapping(value = "/Produits")
 
     public ResponseEntity<Void> ajouterProduit(@Valid @RequestBody Product product) {
+        URI location;
+        if(product.getPrix()==0)
 
-        Product productAdded =  productDao.save(product);
+            throw new ProduitGratuitException("Le produit avec l'id " + product.getId() + " a le prix de vente 0 ou un produit gratuit,Veuillez vérifier");
 
-        if (productAdded == null)
-            return ResponseEntity.noContent().build();
 
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(productAdded.getId())
-                .toUri();
+         else
+        {
 
+            Product productAdded = productDao.save(product);
+
+            if (productAdded == null)
+                return ResponseEntity.noContent().build();
+
+
+            location = ServletUriComponentsBuilder
+                    .fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(productAdded.getId())
+                    .toUri();
+        }
         return ResponseEntity.created(location).build();
     }
+
 
     @DeleteMapping (value = "/Produits/{id}")
     public void supprimerProduit(@PathVariable int id) {
@@ -102,6 +112,31 @@ public class ProductController {
 
         return productDao.chercherUnProduitCher(400);
     }
+    
+     @GetMapping("/AdminProduits")
+        public  Map<String, Integer> calculerMargeProduit() throws JSONException {
+
+            List<Product> allProduct = productDao.findAll();
+
+
+                Map<String, Integer> margeProduits = new HashMap<String, Integer>();
+
+                allProduct.forEach(produit -> {
+                    int marge = produit.getPrix()-produit.getPrixAchat();
+                    margeProduits.put(produit.toString(), marge);
+                });
+
+            return margeProduits;
+        }
+
+
+    @GetMapping(value = "ProduitTrie")
+    public  List<Product> trierProduitsParOrdreAlphabetique () {
+
+        return productDao.findAllByOrderByNomAsc();
+    }
+
+
 
 
 
