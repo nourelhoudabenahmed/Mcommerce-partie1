@@ -1,0 +1,3 @@
+public ProduitGratuitException(String p0) {
+        super(p0);
+    }
